@@ -3,7 +3,7 @@
 Read-only machine-validated Korean Lotto 6/45 draw results for the Bokdeongi mobile app.
 
 - Generated files (after first successful workflow): `docs/latest.json`, `docs/rounds/<round>.json`
-- Public HTTPS JSON: GitHub Pages from the `main` branch's `/docs` directory
+- Public HTTPS JSON: GitHub Pages deployed directly by the scheduled GitHub Actions workflow from verified `docs/` files
 - Uses only Korean lottery operator (동행복권) website-internal result feeds; not a documented or supported public API.
 - This project does NOT issue lottery tickets, verify ticket ownership, pay prizes, or guarantee winnings.
 - Final results and prizes must be verified at [the operator's official site](https://www.dhlottery.co.kr/lt645/result).
@@ -22,9 +22,13 @@ python -m unittest discover -s lotto_data/tests -v
 
 ## Set up GitHub Pages
 
-Repository Settings → Pages → Build and deployment → Deploy from a branch → `main` / `/docs`.
-Repository Settings → Actions → General → Workflow permissions → Read and write permissions.
-Check the Actions run before treating any JSON as published. A failed run never commits new data.
+1. Repository **Settings → Pages → Build and deployment → Source: GitHub Actions** (NOT "Deploy from a branch").
+2. Repository **Settings → Actions → General → Workflow permissions → Read and write permissions** if the workflow cannot push verified JSON. The workflow itself declares the required minimal job permissions.
+3. **Actions → Verify and publish Lotto 6/45 results → Run workflow** on `main`.
+4. Verify all steps: tests, official source verification, Git commit, **Upload verified JSON files as Pages artifact**, **Deploy verified JSON to GitHub Pages**.
+5. Check `https://gurdung-sys.github.io/Bokdeongi-lotto-data/latest.json` only *after* the workflow finishes successfully.
+
+**Important:** GitHub's `GITHUB_TOKEN` commits do not trigger a branch-source Pages build. For this reason the same workflow explicitly uploads and deploys the verified `docs/` directory to Pages. If the official site is unavailable or data inconsistent, the workflow fails and does **not** publish unverified results.
 
 ## Limitations
 
