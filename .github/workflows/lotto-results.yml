@@ -7,8 +7,12 @@ on:
     - cron: '37 0 * * 0'
   workflow_dispatch:
 
+# Commits pushed by GITHUB_TOKEN do not trigger a branch-based Pages build.
+# Verify, commit and deploy in the same scheduled run.
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 concurrency:
   group: bokdeongi-lotto-results
@@ -17,7 +21,10 @@ concurrency:
 jobs:
   results:
     runs-on: ubuntu-latest
-    timeout-minutes: 7
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -25,7 +32,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Verify all fail-closed pipeline tests
+      - name: Verify fail-closed pipeline tests
         run: python -m unittest discover -s lotto_data/tests -v
       - name: Fetch and cross-check official result (fail closed)
         run: python -m lotto_data.pipeline --site docs
@@ -43,3 +50,12 @@ jobs:
           git diff --cached --quiet && exit 0
           git commit -m 'data: verify and publish Lotto 6/45 round results'
           git push origin HEAD:main
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Upload verified JSON files as Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - name: Deploy verified JSON to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
