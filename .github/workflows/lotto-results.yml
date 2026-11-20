@@ -1,0 +1,45 @@
+name: Verify and publish Lotto 6/45 results
+
+on:
+  schedule:
+    # Asia/Seoul Saturday 21:37 and 22:37, Sunday 09:37
+    - cron: '37 12,13 * * 6'
+    - cron: '37 0 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bokdeongi-lotto-results
+  cancel-in-progress: false
+
+jobs:
+  results:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify all fail-closed pipeline tests
+        run: python -m unittest discover -s lotto_data/tests -v
+      - name: Fetch and cross-check official result (fail closed)
+        run: python -m lotto_data.pipeline --site docs
+      - name: Commit and push only validated JSON files
+        shell: bash
+        run: |
+          if [[ -z "$(git status --porcelain -- docs/latest.json docs/rounds/)" ]]; then
+            echo "No new verified results."
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- docs/latest.json docs/rounds/
+          git diff --cached --check
+          git diff --cached --quiet && exit 0
+          git commit -m 'data: verify and publish Lotto 6/45 round results'
+          git push origin HEAD:main
