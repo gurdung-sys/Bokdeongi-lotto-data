@@ -12,7 +12,9 @@ Read-only machine-validated Korean Lotto 6/45 draw results for the Bokdeongi mob
 
 ## Automated schedule
 
-Saturday 21:37 and 22:37, Sunday 09:37 KST, plus manual `workflow_dispatch`.
+Saturday 21:37, 22:37 and 23:07, Sunday 09:37 KST, plus manual `workflow_dispatch`.
+
+Source or workflow changes on `main` also trigger safe verification (`lotto_data/**` or `.github/workflows/lotto-results.yml` only). Generated `docs/**` commits do **not** retrigger the publisher. GitHub scheduled jobs can be delayed or dropped, so the extra Saturday attempt reduces missed-publication risk; a missing draw is still refused rather than guessed.
 
 ## Tests
 
@@ -25,7 +27,7 @@ python -m unittest discover -s lotto_data/tests -v
 1. Repository **Settings → Pages → Build and deployment → Source: GitHub Actions** (NOT "Deploy from a branch").
 2. Repository **Settings → Actions → General → Workflow permissions → Read and write permissions** if the workflow cannot push verified JSON. The workflow itself declares the required minimal job permissions.
 3. **Actions → Verify and publish Lotto 6/45 results → Run workflow** on `main`.
-4. Verify all steps: tests, official source verification, Git commit, **Upload verified JSON files as Pages artifact**, **Deploy verified JSON to GitHub Pages**.
+4. Verify all steps: tests, official source verification, Git commit, **Upload verified JSON files as Pages artifact**, **Deploy verified JSON to GitHub Pages**, and **Verify publicly served Pages JSON matches committed data**.
 5. Check `https://gurdung-sys.github.io/Bokdeongi-lotto-data/latest.json` only *after* the workflow finishes successfully.
 
 **Important:** GitHub's `GITHUB_TOKEN` commits do not trigger a branch-source Pages build. For this reason the same workflow explicitly uploads and deploys the verified `docs/` directory to Pages. If the official site is unavailable or data inconsistent, the workflow fails and does **not** publish unverified results.
