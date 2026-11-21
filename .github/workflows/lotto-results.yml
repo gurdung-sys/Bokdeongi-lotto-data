@@ -1,9 +1,17 @@
 name: Verify and publish Lotto 6/45 results
 
 on:
+  # Schedule executions can be delayed or dropped by GitHub. A source-only
+  # push safely retries verification, while docs/ commits never retrigger it.
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/lotto-results.yml'
+      - 'lotto_data/**'
   schedule:
-    # Asia/Seoul Saturday 21:37 and 22:37, Sunday 09:37
+    # UTC cron. KST Saturday 21:37, 22:37, 23:07; Sunday 09:37.
     - cron: '37 12,13 * * 6'
+    - cron: '7 14 * * 6'
     - cron: '37 0 * * 0'
   workflow_dispatch:
 
